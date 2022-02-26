@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Väderdata.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class InitialCreation : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,7 +13,7 @@ namespace Väderdata.Migrations
                 name: "Weather",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -22,7 +22,7 @@ namespace Väderdata.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Weather", x => x.ID);
+                    table.PrimaryKey("PK_Weather", x => x.Id);
                 });
         }
 

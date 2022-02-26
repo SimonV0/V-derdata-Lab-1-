@@ -6,8 +6,27 @@ using Väderdata.Core;
 using Väderdata.DataAccess;
 using Väderdata.UI;
 
+//ExcelData data = new ExcelData();
+//data.ReadFileAndUploadToDB(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\TempFuktData.csv"); // FUNGERAR
 
-SQLTasks.TempAndHumidity();
+
+//SQLTasks.TempAndHumidity();
+
+//Console.WriteLine();
+//Menu.ShowDates();
+
+
+SQLTasks.SortByTemp();
+
+
+
+
+
+
+
+
+//ExcelData.ReadFileAndUploadToDB(@"F: \Users\Simon\Documents\Drive\Arkitektur av applikationer i.NET C#\Väderdata (Lab 1)\Testdata.csv");
+//SQLTasks.TempAndHumidity();
 //Menu.ShowDates();
 //SQLTasks.TemperatureByDay(); // Fungerar
 //SQLTasks.LowestTemperature();

@@ -24,11 +24,11 @@ namespace Väderdata.Migrations
 
             modelBuilder.Entity("Väderdata.DataAccess.WeatherModel", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -42,7 +42,7 @@ namespace Väderdata.Migrations
                     b.Property<double>("Temperature")
                         .HasColumnType("float");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("Weather");
                 });

@@ -1,34 +1,11 @@
 ﻿using ChoETL;
+using Microsoft.EntityFrameworkCore;
 using Väderdata.DataAccess;
 
 namespace Väderdata.Core
 {
     public class SQLTasks
     {
-
-        public static void AddToDataBase()
-        {
-            var test = ExcelData.ReadExcelFile<ExcelData>(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\TempFuktData.csv");
-            var validData = ExcelData.VerifyWeatherDataSet<ExcelData>(test);
-
-            using (var context = new WeatherDataContext())
-            {
-                foreach (var item in validData)
-                {
-                    WeatherModel weather = new WeatherModel
-                    {
-                        Date = DateTime.Parse(item.Date!),
-                        Location = item.Place,
-                        Temperature = double.Parse(item.Temperature!),
-                        Humidity = int.Parse(item.Humidity!)
-                    };
-                    context.Add(weather);
-                }
-                context.SaveChanges();
-            }
-
-        }
-
 
         public static void TempAndHumidity()
         {
@@ -42,21 +19,21 @@ namespace Väderdata.Core
 
 
                 var results = from weather in context.Weather
-                        group weather by weather.Location into weatherByLocation
-                        select new
-                        {
-                            Location = weatherByLocation.Key,
-                            Min = weatherByLocation.OrderBy(w => w.Temperature).FirstOrDefault(),
-                            Max = weatherByLocation.OrderByDescending(w => w.Temperature).FirstOrDefault(),
-                            MinHum = weatherByLocation.OrderBy(w => w.Humidity).FirstOrDefault(),
-                            MaxHum = weatherByLocation.OrderByDescending(w => w.Humidity).FirstOrDefault()
-                            
-                        };
+                              group weather by weather.Location into weatherByLocation
+                              select new
+                              {
+                                  Location = weatherByLocation.Key,
+                                  Min = weatherByLocation.OrderBy(w => w.Temperature).FirstOrDefault(),
+                                  Max = weatherByLocation.OrderByDescending(w => w.Temperature).FirstOrDefault(),
+                                  MinHum = weatherByLocation.OrderBy(w => w.Humidity).FirstOrDefault(),
+                                  MaxHum = weatherByLocation.OrderByDescending(w => w.Humidity).FirstOrDefault()
+
+                              };
 
                 foreach (var result in results)
                 {
-                    Console.WriteLine($"{result.Max.Temperature} - {result.Max.Date}");
-                    
+                    Console.WriteLine($"{result.Max.Temperature.ToString().FormatString($"{0:C2}")} - {result.Max.Date}");
+
                     Console.WriteLine($"{result.MaxHum.Humidity} - {result.Max.Date}");
                     Console.WriteLine();
                 }
@@ -105,135 +82,94 @@ namespace Väderdata.Core
 
         public static void TemperatureByDay(DateTime date)
         {
-            
-            //var endDate = date.AddDays(1);
+
             using (var context = new WeatherDataContext())
             {
-                               
-                    var query = from w in context.Weather
-                                    //where w.Date.ToString().Contains(date.ToString())
-                                    //where EF.Functions.Like(w.Date.ToString(), $"{date}%") /*weather.Date == Convert.ToDateTime(date)*/
-                                where w.Date.Date == date.Date
-                                select w;
-                
-                
-                if (query.Count() != 0)
-                {
-                    double lowestTemp = double.MaxValue;
-                    int lowestHumidity = int.MaxValue;
-                    double highestTemp = double.MinValue;
-                    int highestHumidity = int.MinValue;
-                    foreach (var item in query)
-                    {
-                        Console.WriteLine($"{item.Date} \t {item.Location} \t {item.Temperature} \t {item.Humidity}");
-                        if ((item.Temperature < lowestTemp || item.Humidity < lowestHumidity) && item.Location == "Inne")
-                        {
-                            lowestTemp = item.Temperature;
-                            lowestHumidity = item.Humidity;
-                        }
-                        if ((item.Temperature > highestTemp || item.Humidity > highestHumidity) && item.Location == "Ute")
-                        {
-                            highestTemp = item.Temperature;
-                            highestHumidity = item.Humidity;
-                        }
-                    }
-                    query.Count();
-                    Console.WriteLine(lowestTemp + "\t" + highestTemp);
-                    Console.WriteLine(lowestHumidity + "\t" + highestHumidity );
-                
-                }
-                else
-                {
-                    Console.WriteLine($"There's no record from the requested date ({date.Date})");
-                }
-                
-            }
-            
+                var averageTemp = context.Weather!.Where(d => d.Date == date).Average(t => t.Temperature);
+                var averageHumidity = context.Weather!.Where(d => d.Date == date).Average(t => t.Humidity);
+                var lowestTemp = context.Weather!.Where(d => d.Date == date).Min(t => t.Temperature);
+                var highestTemp = context.Weather!.Where(d => d.Date == date).Max(t => t.Temperature);
+                var lowestHumidity = context.Weather!.Where(d => d.Date == date).Min(t => t.Humidity);
+                var highestHumidity = context.Weather!.Where(d => d.Date == date).Max(t => t.Humidity);
 
+                Console.WriteLine($"Lowest Temperature: {lowestTemp}\t Average Temperature: {averageTemp}\t Highest Temperature: {highestTemp}");
+                Console.WriteLine($"Lowest Humidity: {lowestHumidity}\t Average Humidity: {averageHumidity}\t Highest Humidity: {highestHumidity}");
+            }
         }
 
 
-        //public static void ReadData()
-        //{
-        //    foreach (var rec in new ChoCSVReader<ExcelData>(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i.NET C#\Väderdata (Lab 1)\Testdata.csv");
-        //    .WithFirstLineHeader())
-        //    {
-        //        using (var p = ChoCSVReader<EmployeeRec>.LoadText(csv)
-        //        .WithFirstLineHeader()
-        //        .WithField(c => c.Id)
-        //        .WithField(c => c.Name)
-        //        .ThrowAndStopOnMissingField(false)
-        //        .
-        //)
 
-        //            Console.WriteLine($"Date: {rec.Date}");
-        //        Console.WriteLine($"Place: {rec.Place}");
-        //        Console.WriteLine($"Temperature: {rec.Temperature}");
-        //        Console.WriteLine($"Humidity: {rec.Humidity}");
-        //    }
+        public static void SortByTemp()
+        {
+            using (var context = new WeatherDataContext())
+            {
+                //var sortedByTemp = context.Weather!.Where(l=>l.Location == "Inne").OrderByDescending(d => d.Temperature).DistinctBy(d=>d.Date.DayOfYear).ToList();
 
+                //var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne").OrderByDescending(t => t.Temperature).DistinctBy(d=>d.Date).ToList();
+                //var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne").OrderByDescending(t => t.Temperature).GroupBy(g => g.Date.Date.DayOfYear).Select(a => a.FirstOrDefault()).Take(10).ToList();
+                //var sortedByOutsideTemperature = context.Weather!.Where(l => l.Location == "Ute").OrderByDescending(t => t.Temperature).ToList();
 
+                //var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne")/*.OrderBy(l => l.Temperature)*/.GroupBy(d => d.Date.DayOfYear && d.Temperature)
+                //    .Select(f => f.OrderByDescending(l => l.Temperature).FirstOrDefault()).Take(10);
 
-            //public static void CSVtoDatabase()
-            //{
-            //    string connectionstring = "Server=(localdb)\\mssqllocaldb;Database=WeatherData;Trusted_Connection=True;";
-            //    using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
-            //    {
-            //        using (var p = new ChoCSVReader(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\Testdata.csv").WithFirstLineHeader())
-            //        {
-            //            bcp.DestinationTableName = "Weather";
-            //            bcp.EnableStreaming = true;
-            //            bcp.BatchSize = 10000;
-            //            bcp.BulkCopyTimeout = 0;
-            //            bcp.NotifyAfter = 100;
-            //            bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e),
-            //            {
-            //                Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
-            //            };
-            //            bcp.WriteToServer(p.AsDataReader());
-            //        }
-            //    }
-            //}
+                //var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne").OrderByDescending(l => l.Temperature).Distinct().ToList();
 
+                //var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne").OrderByDescending(l => l.Temperature).GroupBy(d => new { d.Date.DayOfYear, d.Temperature }).ToList();
 
-            //public static void FileToDatabase()
-            //{
-            //    var bulkCopyUtility = new BulkCopyUtility("Server=(localdb)\\mssqllocaldb;Database=WeatherData;Trusted_Connection=True;");
-            //    var dataReader = new CsvDataReaderExtraColumns(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\Testdata.csv",
-            //        new List<TypeCode>(4)
-            //    {
-            //            //TypeCode.Int32,
-            //            TypeCode.DateTime,
-            //            TypeCode.String,
-            //            TypeCode.Double,
-            //            TypeCode.Int32
-            //    });
+                //var FilteredInsideList= new List<WeatherModel>();
 
-            //    dataReader.AddExtraColumn("Id", -1);
-            //    bulkCopyUtility.BulkCopy("Weather", dataReader);
-            //}
+                //var SortedByInsideTemperature = context.Weather!.GroupBy(w => w.Date.Date).Select ( g => new { Day = g.Key, })
+                //context
+                //.Weather
+                //.GroupBy(w => w.Date.Date) 
+                //.Select(grouping => new { Day = grouping.Key, AverageTemperature = grouping.Average(weatherOnSameDay => weatherOnSameDay.Temperature))
+
+                var sortedByInsideTemperature = context.Weather!.Where(l => l.Location == "Inne").GroupBy(w => w.Date.Date).Select(t=> new { averageTemp = t.Average(t=>t.Temperature), t.Key.Date.Date }).OrderByDescending(t=>t.averageTemp).Take(10);
+                var sortedByOutsideTemperature = context.Weather!.Where(l => l.Location == "Ute").GroupBy(w => w.Date.Date).Select(t=> new { averageTemp = t.Average(t=>t.Temperature), t.Key.Date.Date }).OrderByDescending(t=>t.averageTemp).Take(10);
+
+                Console.WriteLine("Average inside temperature sorted by day");
+                foreach (var item in sortedByInsideTemperature)
+                {
+                    Console.WriteLine($"{item.Date.Date}\t {item.averageTemp}");
+                    //Console.WriteLine($"{item.Date}\t{item.Location}\t{item.Temperatur}\t{item.Humidity}\t");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Average outside temperature sorted by day");
+                foreach (var item in sortedByOutsideTemperature)
+                {
+                    Console.WriteLine($"{item.Date}\t {item.averageTemp}");
+
+                }
 
 
-            //public static void Test()
-            //    {
-            //        ExcelData.ReadExcelFile(@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\Testdata.csv");
 
-            //        using (var context = new WeatherDataContext())
-            //        {
-            //            var weather = new WeatherModel
-            //            {
-            //                Date = DateTime.Now,
-            //                Location = "Inne",
-            //                Humidity = 37,
-            //                Temperature = 25.3
-            //            };
 
-            //            context.Weather!.Add(weather);
-            //            context.SaveChanges();
-            //        }
-            //    }
 
-            //}
+                //if (item.Date.DayOfYear != date.Date.DayOfYear && count != 10)
+                //{
+
+                //date = item.Date;
+                //count++;
+                //}
+                //if (count == 30)
+                //    break;
+
+                //Console.WriteLine($"{item.Date}\t{item.Location}\t{item.Temperature}\t{item.Humidity}\t");
+
+                //for (int i = 0; i < 10; i++)
+                //{
+                //    Console.WriteLine($"{sortedByInsideTemperature[i]!.Date}\t{sortedByInsideTemperature[i]!.Location}\t {sortedByInsideTemperature[i]!.Temperature}\t{sortedByInsideTemperature[i]!.Humidity}");
+                //}
+                //for (int i = 0; i < 10; i++)
+                //{
+                //    Console.WriteLine($"{sortedByOutsideTemperature[i]!.Date}\t{sortedByOutsideTemperature[i]!.Location}\t {sortedByOutsideTemperature[i]!.Temperature}\t{sortedByOutsideTemperature[i]!.Humidity}");
+                //}
+            }
+
         }
     }
+}
+
+    
 

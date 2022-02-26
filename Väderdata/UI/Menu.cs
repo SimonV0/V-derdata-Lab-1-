@@ -28,7 +28,7 @@ namespace Väderdata.UI
         }
 
         public static DateTime SelectDate()
-        {   
+        {
             DateTime date;
             var input = DateTime.TryParse(Console.ReadLine(), out date);
             return date;
