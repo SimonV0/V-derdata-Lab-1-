@@ -15,33 +15,37 @@ namespace Väderdata.Core
             weatherList = new List<WeatherModel>();
         }
 
-
-        //@"F:\Users\Simon\Documents\Drive\Arkitektur av applikationer i .NET C#\Väderdata (Lab 1)\TempFuktData.csv"
         public void ReadFileAndUploadToDB(string path)
         {
 
-
-            var streamReader = new StreamReader(path);
-            string firstLine = streamReader.ReadLine()!;
-            string secondLine = "";
-            while ((secondLine = streamReader.ReadLine()!) != null)
+            using (var context = new WeatherDataContext())
             {
-                var line = secondLine.Split(',');
-                double temp = IsValidIntOrDouble(line);
-                DateTime dateTime = IsValidDateTime(line);
-                var humidity = int.Parse(line[3]);
-                var myClass = new WeatherModel
+                context.Database.EnsureCreated();
+                var empty = context.Weather.FirstOrDefault(i => i.Id == 1);
+                if (empty == null)
                 {
-                    Date = dateTime,
-                    Location = line[1],
-                    Temperature = temp,
-                    Humidity = humidity
-                };
-                weatherList.Add(myClass);
+                    var streamReader = new StreamReader(path);
+                    string firstLine = streamReader.ReadLine()!;
+                    string secondLine = "";
+                    while ((secondLine = streamReader.ReadLine()!) != null)
+                    {
+                        var line = secondLine.Split(',');
+                        double temp = IsValidIntOrDouble(line);
+                        DateTime dateTime = IsValidDateTime(line);
+                        var humidity = int.Parse(line[3]);
+                        var myClass = new WeatherModel
+                        {
+                            Date = dateTime,
+                            Location = line[1],
+                            Temperature = temp,
+                            Humidity = humidity
+                        };
+                        weatherList.Add(myClass);
+                    }
+                    Duplicates();
+                    AddToDatabase();
+                }
             }
-            Duplicates();
-            AddToDatabase();
-
         }
 
         private void AddToDatabase()

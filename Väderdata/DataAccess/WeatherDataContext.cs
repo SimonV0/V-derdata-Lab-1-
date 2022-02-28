@@ -26,7 +26,7 @@ namespace Väderdata.DataAccess
             if (!optionsBuilder.IsConfigured)
             {
 
-                // Works but crashes??? On SqlTask
+                // Fungerade inte men lämnar kvar koden iallafall.
 
                 //var builder = new ConfigurationBuilder()
                 //        .AddJsonFile($"appsettings.json", true, true);
@@ -35,7 +35,7 @@ namespace Väderdata.DataAccess
                 //optionsBuilder.UseSqlServer(connectionString);
 
                 optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=WeatherData;Trusted_Connection=True;");
-                //optionsBuilder.UseSqlServer(@"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=WeatherData;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+                
             }
         }
 
